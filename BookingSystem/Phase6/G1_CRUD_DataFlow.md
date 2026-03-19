@@ -81,8 +81,8 @@ sequenceDiagram
     F->>B: PUT /api/resources/:id (JSON)
 
     alt Invalid id
-        B->>F: 400 Invalid id
-        F->>U: Shows validation message
+        B-->>F: 400 Invalid id
+        F-->>U: Shows validation message
     else Valid id
         B->>V: Validate request
         V-->>B: Validation result
@@ -126,8 +126,8 @@ sequenceDiagram
     F->>B: DELETE /api/resources/:id (JSON)
 
     alt Invalid id
-        B->>F: 400 Invalid id
-        F->>U: Shows validation message
+        B-->>F: 400 Invalid id
+        F-->>U: Shows validation message
     else Valid id
         B->>S: delete Resource(data)
         S->>DB: DELETE FROM resources

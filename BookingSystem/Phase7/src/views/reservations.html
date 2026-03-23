@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reservations | Booking System</title>
+
+    <!-- Tailwind CDN + Brand config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: "#e10e49",
+                            light: "#ffffff",
+                            dark: "#1e1e1e",
+                            blue: "#263f6a",
+                            green: "#284e36",
+                            orange: "#e37222",
+                            rose: "#c24d52",
+                        }
+                    },
+                    boxShadow: {
+                        soft: "0 8px 40px rgba(0, 0, 0, 0.45)",
+                    }
+                }
+            }
+        }
+    </script>
+    <script type="module" src="js/reservations.js" defer ></script>
+    <script src="js/form-reservations.js" defer ></script>
+</head>
+
+<body class="min-h-screen flex flex-col bg-brand-light text-brand-dark">
+    <header class="sticky top-0 z-40 bg-brand-dark text-white shadow-soft">
+        <div class="mx-auto max-w-7xl px-6">
+            <div class="flex h-16 items-center justify-between">
+                <a href="/" class="flex items-center gap-3 flex-1">
+                    <img src="logo.svg" alt="Booking System" class="h-10 w-10">
+                    <div class="leading-tight">
+                        <span class="block text-sm font-semibold">
+                            Booking System
+                        </span>
+                        <span class="block text-xs text-white/70">
+                            Secure resource booking
+                        </span>
+                    </div>
+                </a>
+                <nav class="flex items-center gap-3">
+                    <a href="/resources" data-auth="user"
+                        class="res-link rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10 w-40 text-center cursor-not-allowed pointer-events-none">
+                        Resources
+                    </a>
+                    <a href="/reservations" data-auth="user"
+                        class="res-link rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10 w-40 text-center cursor-not-allowed pointer-events-none">
+                        Reservations
+                    </a>
+                    <a href="/register" data-auth="guest" class="auth-link rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10 w-40 text-center">
+                        Register
+                    </a>
+                    <a href="/login" data-auth="guest" class="auth-link rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10 w-40 text-center">
+                        Sign in
+                    </a>
+                    <button onclick="logout()" data-auth="user" class="auth-link hidden rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white w-40 text-center">
+                        Sign out
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main id="mainContent" class="mx-auto max-w-7xl px-6 flex-grow">
+
+        <!-- Page header -->
+        <section class="py-12">
+            <div class="rounded-3xl bg-white p-8 shadow-soft">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <span
+                            class="inline-flex items-center gap-2 rounded-full bg-brand-blue/10 px-4 py-1 text-sm font-semibold text-brand-blue">
+                            Reservation management
+                        </span>
+                        <h1 class="mt-4 text-3xl font-semibold leading-tight">
+                            Reservations
+                        </h1>
+                        <p class="mt-2 max-w-2xl text-sm text-black/70">
+                            As a reserver, you can see all the reservations. As a manager, you can create, update, and delete reservations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form -->
+        <section class="pb-16">
+            <div class="grid gap-8 lg:grid-cols-12">
+                <div class="lg:col-span-8">
+                    <div class="rounded-3xl bg-white p-8 shadow-soft">
+                        <h2 class="text-xl font-semibold">Reservation form</h2>
+                        <p class="mt-1 text-sm text-black/60">
+                            All fields are required. Fill in the details below. Use Create for new items, Update for
+                            existing ones, and Delete to remove.
+                        </p>
+                        <div id="formMessage" class="hidden mt-6 rounded-2xl border px-4 py-3 text-sm" role="alert"></div>
+
+                        <form class="mt-8 space-y-6" id="reservationForm" novalidate>
+                            <div class="mt-4 gap-4">
+                                <label for="resourceId" class="block text-sm font-semibold">
+                                    Resource
+                                </label>
+                                <select class="mt-2 gap-4 mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:ring-2 transition-all duration-200 ease-out" name="resourceId" id="resourceId"></select>
+                                <p class="mt-2 text-xs text-black/50">
+                                    Select the associated resource
+                                </p>
+                            </div>
+
+                            <input type="hidden" id="userId" name="userId" value="" />
+                            <input type="hidden" id="reservationId" name="reservationId" value="" />
+
+
+                            <!-- Resource name -->
+                            <div>
+                                <label for="reservationNote" class="block text-sm font-semibold">
+                                    Reservation note
+                                </label>
+                                <div id="reservationNoteCnt"></div>
+                                <p class="mt-2 text-xs text-black/50">
+                                    Use a short, descriptive note users recognize (5–30 characters). Use letters,
+                                    numbers, spaces and symbols ,.- only.
+                                </p>
+                            </div>
+
+                            <!-- Start and end time -->
+                            <div class="grid gap-6 lg:grid-cols-5">
+
+                                <!-- Availability (Radio buttons) -->
+                                <div class="mt-4 gap-4">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="reservationStatus" value="active" checked>
+                                        <span class="text-sm">active</span>
+                                    </label>
+
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="reservationStatus" value="cancelled">
+                                        <span class="text-sm">cancelled</span>
+                                    </label>
+
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="reservationStatus" value="completed">
+                                        <span class="text-sm">completed</span>
+                                    </label>
+                                </div>
+
+                                <p class="mt-2 text-xs text-black/50">
+                                    Set the status of this reservation
+                                </p>
+
+                                <!-- Times -->
+                                <div class="lg:col-span-2">
+                                    <label for="reservationStart" class="block text-sm font-semibold">
+                                        Reservation start
+                                    </label>
+
+                                    <!-- Price value -->
+                                    <div class="mt-2 flex gap-4 items-stretch">
+                                        <input id="reservationStart" name="reservationStart" type="datetime-local"
+                                            class="w-full max-w-[280px] rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none
+           focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30
+           transition-all duration-200 ease-out" />
+                                    </div>
+
+                                    <label for="reservationEnd" class="block text-sm font-semibold">
+                                        Reservation end
+                                    </label>
+
+                                    <!-- Price value -->
+                                    <div class="mt-2 flex gap-4 items-stretch">
+                                        <input id="reservationEnd" name="reservationEnd" type="datetime-local"
+                                            class="w-full max-w-[280px] rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none
+           focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30
+           transition-all duration-200 ease-out" />
+                                    </div>
+
+                                    <p class="mt-2 text-xs text-black/50">
+                                        Select a start and end time for this reservation.
+                                    </p>
+                                </div>
+
+                                
+
+                            </div>
+
+
+                            <!-- Actions -->
+                            <div id="reservationActions"
+                                class="mt-8 grid gap-4 w-full grid-cols-1 sm:grid-flow-col sm:auto-cols-fr"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right side (optional info card matching theme) -->
+                <aside class="lg:col-span-4 space-y-6">
+                    <!-- Resource list -->
+                    <div class="rounded-3xl bg-white p-6 shadow-soft">
+                        <div class="flex items-center justify-between gap-3">
+                            <h3 class="font-semibold">Reservation list</h3>
+                        </div>
+
+                        <p class="mt-2 text-xs text-black/50">
+                            Click an item to view, edit or delete it.
+                        </p>
+
+                        <div id="reservationList" class="mt-4 space-y-3">
+                            <!-- reservation.js renders items here -->
+                        </div>
+                    </div>
+
+                    <!-- Original info card -->
+                    <div class="rounded-3xl bg-white p-6 shadow-soft">
+                        <h3 class="font-semibold">Good reservation details</h3>
+                        <ul class="mt-4 space-y-2 text-sm text-black/70">
+                            <li>• Use the right resource</li>
+                            <li>• Practical note (descriptive, recognizable)</li>
+                            <li>• Status reflects real-world access</li>
+                        </ul>
+                        <a href="index.html"
+                            class="mt-5 inline-block w-full rounded-2xl bg-brand-primary px-4 py-3 text-center text-sm text-white hover:bg-brand-dark/80 transition-all duration-200 ease-out">
+                            Back to homepage
+                        </a>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brand-dark text-white">
+        <div class="mx-auto max-w-7xl px-6 py-10">
+
+            <!-- Top row -->
+            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+
+                <!-- Brand -->
+                <div class="flex items-center gap-3">
+                    <img src="logo.svg" alt="Booking System" class="h-8 w-8 opacity-90">
+                    <div class="leading-tight">
+                        <p class="text-sm font-semibold">Booking System</p>
+                        <p class="text-xs text-white/60">
+                            Secure resource booking
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer navigation -->
+                <nav class="flex items-center gap-3 text-sm text-white/70">
+                    <a href="/privacypolicy"
+                        class="rounded-full px-3 py-1 hover:bg-white/10 hover:text-white transition cursor-not-allowed pointer-events-none">Privacy</a>
+                    <span class="text-white/30">|</span>
+                    <a href="/terms"
+                        class="rounded-full px-3 py-1 hover:bg-white/10 hover:text-white transition cursor-not-allowed pointer-events-none">Terms</a>
+                    <span class="text-white/30">|</span>
+                    <a href="/cookiepolicy"
+                        class="rounded-full px-3 py-1 hover:bg-white/10 hover:text-white transition cursor-not-allowed pointer-events-none">Cookies</a>
+                </nav>
+
+            </div>
+
+            <!-- Divider -->
+            <div class="mt-8 border-t border-white/10 pt-4 text-xs text-white/50">
+                © <span id="year"></span> Ville Heikkiniemi. All rights reserved. Source code licensed under the MIT
+                License.
+            </div>
+
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+
+</body>
+
+</html>
